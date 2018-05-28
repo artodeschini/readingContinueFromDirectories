@@ -10,11 +10,20 @@ public class Customer {
     private String name;
     private String businessArea;
 
+    public Customer(String cnpj, String name, String businessArea) {
+        this.setCnpj(cnpj);
+        this.setName( name);
+        this.setBusinessArea( businessArea );
+    }
+
     public String getCnpj() {
         return cnpj;
     }
 
     public void setCnpj(String cnpj) {
+        if ( cnpj == null ) {
+            cnpj = "";
+        }
         this.cnpj = cnpj;
     }
 
@@ -23,6 +32,9 @@ public class Customer {
     }
 
     public void setName(String name) {
+        if ( name == null ) {
+            name = "";
+        }
         this.name = name;
     }
 
@@ -31,6 +43,9 @@ public class Customer {
     }
 
     public void setBusinessArea(String businessArea) {
+        if ( businessArea == null) {
+            businessArea = "";
+        }
         this.businessArea = businessArea;
     }
 
@@ -48,5 +63,14 @@ public class Customer {
     @Override
     public int hashCode() {
         return cnpj.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "Customer{" +
+                "cnpj='" + cnpj + '\'' +
+                ", name='" + name + '\'' +
+                ", businessArea='" + businessArea + '\'' +
+                '}';
     }
 }

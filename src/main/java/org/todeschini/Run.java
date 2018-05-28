@@ -1,37 +1,30 @@
 package org.todeschini;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
 
-import static java.nio.file.StandardWatchEventKinds.*;
+import org.todeschini.files.FileController;
+
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created by Artur on 28/05/18.
  */
 public class Run {
 
+    private static Logger LOGGER = Logger.getLogger( Run.class.getSimpleName() );
+
+    /**
+     * Start the program
+     * @param args
+     */
     public static void main(String[] args) {
-
-        Path in = Paths.get( System.getProperty("user.dir") + "/in" );
-
-        Path out = Paths.get( System.getProperty("user.dir") + "/out" );
-
-
+        FileController controller = FileController.getInstace();
 
         try {
-            WatchService watcher =  in.getFileSystem().newWatchService();
-
-            WatchKey key = in.register(watcher,
-                    ENTRY_CREATE /*,
-                    ENTRY_DELETE,
-                    ENTRY_MODIFY */);
-        } catch (IOException ioe) {
-            System.err.println(ioe);
+            controller.createWath();
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, e.getMessage() );
         }
-
-
     }
 }

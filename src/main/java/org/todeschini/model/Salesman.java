@@ -74,12 +74,24 @@ public class Salesman {
 
         Salesman salesman = (Salesman) o;
 
-        return cpf.equals(salesman.cpf);
+        if (cpf != null ? !cpf.equals(salesman.cpf) : salesman.cpf != null) return false;
+        return name != null ? name.equals(salesman.name) : salesman.name == null;
 
     }
 
     @Override
     public int hashCode() {
-        return cpf.hashCode();
+        int result = cpf != null ? cpf.hashCode() : 0;
+        result = 31 * result + (name != null ? name.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Salesman{" +
+                "cpf='" + cpf + '\'' +
+                ", name='" + name + '\'' +
+                ", salary=" + salary +
+                '}';
     }
 }

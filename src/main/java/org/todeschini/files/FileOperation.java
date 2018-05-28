@@ -1,8 +1,6 @@
 package org.todeschini.files;
 
-import org.todeschini.model.Category;
-import org.todeschini.model.Customer;
-import org.todeschini.model.Salesman;
+import org.todeschini.model.*;
 
 import java.io.*;
 import java.util.HashMap;
@@ -21,6 +19,8 @@ public class FileOperation implements Operation {
 
     private Map<String, Salesman> salesmen = new HashMap<String, Salesman>();
     private Map<String, Customer> customers = new HashMap<String, Customer>();
+    private Map<String, Sale> sales = new HashMap<String, Sale>();
+
 
 
     /**
@@ -48,7 +48,9 @@ public class FileOperation implements Operation {
         }
     }
 
-    public void categorize(File file) {
+    @Override
+    public void categorize(String fileName) {
+        File file = new File( PATH_IN + "/" + fileName);
         BufferedReader br = this.getBufferedReader(file);
 
         String[] prorpiedades = null;
@@ -76,14 +78,46 @@ public class FileOperation implements Operation {
 
                     } else {
                         salesman.setName( data[2] );
-                        salesman.setSalary( data[3 ] );
+                        salesman.setSalary( data[3] );
 
                         salesmen.replace( salesman.getCpf() , salesman );
                     }
 
+                    System.out.println( salesman.toString() );
+
                 } else if ( typeData == Category.TYPE_CUSTOMER ) {
 
+                    //0    1   2    3
+                    //002çCNPJçNameçBusinessAre
+                    Customer customer = customers.get( data[1] );
+
+                    if ( customer == null ) {
+                        customers.put( data[1], new Customer( data[1], data[2], data[3] ) );
+                    } else {
+
+                        customer.setName( data[2 ] );
+                        customer.setBusinessArea( data[3] );
+
+                        customers.replace( data[1], customer );
+                    }
+
+                    System.out.println( customer );
+
                 } else if ( typeData == Category.TYPE_SALES ) {
+                    //0    1      2                               3
+                    //003çSaleIDç[ItemID-ItemQuantity-ItemPrice]çSalesmanname
+                    Sale sale = sales.get( data [1] );
+
+                    String item = data[2].substring(1, data[2].length() -1 );
+
+
+                    if ( sale == null ) {
+                        sale = new Sale( data[1], data[3] , "", "", "" );
+                    } else {
+                        //
+                        //sale.addItem( );
+                        sales.replace( sale.getId(), sale );
+                    }
 
                 } else {
                     throw new RuntimeException("DATA TYPE NO ACCEPT " + typeData);
@@ -95,4 +129,9 @@ public class FileOperation implements Operation {
         }
 
     }
+
+//● Amount of clients in the input file
+//● Amount of salesman in the input file
+//● ID of the most expensive sale
+//● Worst salesman ever
 }
