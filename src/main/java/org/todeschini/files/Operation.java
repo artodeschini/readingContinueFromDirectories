@@ -12,8 +12,8 @@ public interface Operation {
     String ITEN_DELIMITER = ",";
     String ITEM_DELIMITER_ATR = "-";
     String PATH_IN  = System.getProperty("user.home") + "/data/in";
-    String PATH_OUT = System.getProperty("user.home") + "data/out";
-    String PATH_PROCESS = System.getProperty("user.home") + "data/process";
+    String PATH_OUT = System.getProperty("user.home") + "/data/out";
+    String PATH_PROCESS = System.getProperty("user.home") + "/data/process";
     String FILE_EXTETION = ".dat";
 
     void categorize(String fileName) throws IOException;

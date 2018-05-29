@@ -7,9 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -48,17 +46,13 @@ public class FileOperation implements Operation {
             String data[] = null;
             String typeData = null;
             while ((line = reader.readLine()) != null) {
-                //process each line in some way
-                //System.out.println( line );
-                data = line.split( delimiterByField );
+                data = line.trim().split( delimiterByField );
 
                 typeData = data[0];
 
-                //System.out.println( typeData );
-
                 if (typeData.equals( Category.TYPE_SALESMAN ) ) {
 
-                    //0      1   2   3
+                    //0    1   2   3
                     //001çCPFçNameçSalary
                     Salesman salesman = salesmen.get( data[2] ) ;
 
@@ -141,23 +135,26 @@ public class FileOperation implements Operation {
                 }
 
             }
+        }
 
-            //move
-            File file = new File( PATH_IN + "/" + fileName);
-            try {
-                moveFile( file, new File( Operation.PATH_PROCESS + "/" + System.currentTimeMillis() + "-" + fileName) );
-            } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, e.getMessage() );
-            }
+        this.processOutPut( fileName );
+
+        //move
+        File file = new File( PATH_IN + "/" + fileName);
+        try {
+            moveFile( file, new File( Operation.PATH_PROCESS + "/" + System.currentTimeMillis() + "-" + fileName) );
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage() );
+            e.printStackTrace();
+        }
 
 
-            //del
-            try {
-                delete( file );
-            } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, e.getMessage() );
-            }
-
+        //del
+        try {
+            delete( file );
+        } catch (Exception e) {
+            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, e.getMessage() );
         }
     }
 
@@ -182,8 +179,9 @@ public class FileOperation implements Operation {
 
 
         try {
-            writeLargerTextFile( Operation.PATH_OUT + "/{" + fileNameIn + "}.done.dat" , lines );
-        } catch (IOException e) {
+            writeLargerTextFile( Operation.PATH_OUT + "/{" + fileNameIn.replace(".dat","")  + "}.done.dat" , lines );
+        } catch (Exception e) {
+            e.printStackTrace();
             LOGGER.log(Level.SEVERE, e.getMessage() );
         }
     }
@@ -215,14 +213,15 @@ public class FileOperation implements Operation {
         return s != null ? s.getId() : "";
     }
 
-    public void writeLargerTextFile(String aFileName, List<String> lines) throws IOException {
+    public void writeLargerTextFile(String aFileName, List<String> lines) {
         ////%HOMEPATH%/data/out. The filename must follow this pattern, {flat_file_name}.done.dat.
         Path path = Paths.get( aFileName );
-        try (BufferedWriter writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8) ) {
-            for(String line : lines){
-                writer.write(line);
-                writer.newLine();
-            }
+        try {//(Files.write(path, charset, list, StandardOpenOption.APPEND);)
+        //try (BufferedWriter writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8) ) {
+            Files.write(path, lines,  StandardCharsets.UTF_8, StandardOpenOption.CREATE);
+        } catch (Exception e) {
+            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, e.getMessage() );
         }
     }
 
@@ -255,13 +254,13 @@ public class FileOperation implements Operation {
 
     @Override
     public void createDiretoryIfNotExist(String diretoryName) {
-
         File diretory = new File( diretoryName );
         try {
             if( !diretory.exists() ) {
                 diretory.mkdir();
             }
         } catch (Exception e) {
+            e.printStackTrace();
             LOGGER.log(Level.INFO, "Error to create the diretory " + diretoryName + "\n" + e.getMessage() );
         }
     }

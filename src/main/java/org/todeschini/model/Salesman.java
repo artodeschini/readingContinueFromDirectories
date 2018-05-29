@@ -13,12 +13,6 @@ public class Salesman {
 
     private Double sumOfSales = 0.0;
 
-    public Salesman(String cpf, String name, Double salary) {
-        this.setCpf(cpf);
-        this.setName(name);
-        this.setSalary( salary );
-    }
-
     public Salesman(String cpf, String name, String salary) {
         this.setCpf(cpf);
         this.setName(name);
@@ -100,6 +94,7 @@ public class Salesman {
                 "cpf='" + cpf + '\'' +
                 ", name='" + name + '\'' +
                 ", salary=" + salary +
+                ", sumOfSales=" + sumOfSales +
                 '}';
     }
 }
