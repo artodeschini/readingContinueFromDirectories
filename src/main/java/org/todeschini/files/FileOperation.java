@@ -3,9 +3,12 @@ package org.todeschini.files;
 import org.todeschini.model.*;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -15,66 +18,47 @@ public class FileOperation implements Operation {
 
     private static Logger LOGGER = Logger.getLogger( FileOperation.class.getName() );
 
-    private String delimiter = Operation.DELIMITER_DEFAULT;
+    private String delimiterByField = ";";
+    private String delimiterByItem = ",";
+    private String delimiterByAttrItem = "-";
 
     private Map<String, Salesman> salesmen = new HashMap<String, Salesman>();
     private Map<String, Customer> customers = new HashMap<String, Customer>();
     private Map<String, Sale> sales = new HashMap<String, Sale>();
 
-
-
-    /**
-     * @author Artur
-     *
-     * Get the encode of the file to read the acents
-     *
-     * @return BufferedReader
-     *
-     * @throws RuntimeException
-     */
-    private BufferedReader getBufferedReader(File file) throws RuntimeException {
-        try {
-
-            FileReader fileReader = new FileReader(file);
-            String encode = fileReader.getEncoding();
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), encode) );
-            return reader;
-
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException("Erro ao ler o arquivo");
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("Erro ao ler o arquivo");
-        }
+    public FileOperation(String delimiterByField, String delimiterByItem, String delimiterByAttrItem) {
+        this.delimiterByField = delimiterByField;
+        this.delimiterByItem = delimiterByItem;
+        this.delimiterByAttrItem = delimiterByAttrItem;
     }
 
     @Override
-    public void categorize(String fileName) {
+    public void categorize(String fileName) throws IOException {
         File file = new File( PATH_IN + "/" + fileName);
-        BufferedReader br = this.getBufferedReader(file);
+        Path path = Paths.get( PATH_IN + "/" + fileName );
 
-        String[] prorpiedades = null;
-        String s;
-
-
-        try {
-            String line = br.readLine();
-            String[] data = null;
+        try (BufferedReader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)){
+            String line = null;
+            String data[] = null;
             String typeData = null;
-
-            while ( line != null ) {
-                data = line.split( delimiter );
+            while ((line = reader.readLine()) != null) {
+                //process each line in some way
+                System.out.println( line );
+                data = line.split( delimiterByField );
 
                 typeData = data[0];
 
-                if (typeData == Category.TYPE_SALESMAN ) {
+                System.out.println( typeData );
+
+                if (typeData.equals( Category.TYPE_SALESMAN ) ) {
 
                     //0      1   2   3
                     //001çCPFçNameçSalary
-                    Salesman salesman = salesmen.get( data[ 1 ] );
+                    Salesman salesman = salesmen.get( data[2] ) ;
 
                     if ( salesman == null ) {
-                        salesmen.put( data[2], new Salesman( data[1], data[2], data[3] ) );
+                        salesman = new Salesman( data[1], data[2], data[3] );
+                        salesmen.put( data[2], salesman );
 
                     } else {
                         salesman.setName( data[2] );
@@ -85,14 +69,15 @@ public class FileOperation implements Operation {
 
                     System.out.println( salesman.toString() );
 
-                } else if ( typeData == Category.TYPE_CUSTOMER ) {
+                } else if ( typeData.equals( Category.TYPE_CUSTOMER ) ) {
 
                     //0    1   2    3
                     //002çCNPJçNameçBusinessAre
                     Customer customer = customers.get( data[1] );
 
                     if ( customer == null ) {
-                        customers.put( data[1], new Customer( data[1], data[2], data[3] ) );
+                        customer = new Customer( data[1], data[2], data[3] );
+                        customers.put( data[1], customer);
                     } else {
 
                         customer.setName( data[2 ] );
@@ -103,31 +88,50 @@ public class FileOperation implements Operation {
 
                     System.out.println( customer );
 
-                } else if ( typeData == Category.TYPE_SALES ) {
+                } else if ( typeData.equals( Category.TYPE_SALES ) ) {
                     //0    1      2                               3
                     //003çSaleIDç[ItemID-ItemQuantity-ItemPrice]çSalesmanname
-                    Sale sale = sales.get( data [1] );
+                    //in = "003ç10ç[1-10-100,2-30-2.50,3-40-3.10]çDiego";
+                    //item
+                    //[ItemID-ItemQuantity-ItemPrice]
+                    // 0  1  2 //frist item || separete by -
+                    //[1-10-100
+                    // ,2-30-2.50,3-40-3.10]
 
-                    String item = data[2].substring(1, data[2].length() -1 );
-
+                    Sale sale = sales.get( data[2] );
 
                     if ( sale == null ) {
-                        sale = new Sale( data[1], data[3] , "", "", "" );
+                        String[] itensData = data[2].substring(1,data[2].length()-1).split(",");
+
+                        sale = new Sale( data[1], data[3] );
+
+                        String[] item = null;
+                        for (String str: itensData) {
+                            item = str.split("-");
+                            sale.addItem( new Item( item[0], item[1], item[2] ) );
+                        }
                     } else {
-                        //
-                        //sale.addItem( );
-                        sales.replace( sale.getId(), sale );
+
+                        sale.clearItens();
+
+                        String[] itensData = data[2].substring(1,data[2].length()-1).split(",");
+
+                        String[] item = null;
+                        for (String str: itensData) {
+                            item = str.split("-");
+                            sale.addItem( new Item( item[0], item[1], item[2] ) );
+                        }
+
                     }
+
+                    System.out.println( sale );
 
                 } else {
                     throw new RuntimeException("DATA TYPE NO ACCEPT " + typeData);
                 }
+
             }
-
-        } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, e.getMessage() );
         }
-
     }
 
 //● Amount of clients in the input file

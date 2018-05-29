@@ -44,6 +44,10 @@ public class Sale {
         items.add( item );
     }
 
+    public void clearItens() {
+        items = new LinkedList<Item>();
+    }
+
     public List<Item> getItems() {
         return items;
     }

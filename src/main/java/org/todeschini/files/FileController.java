@@ -15,13 +15,21 @@ public class FileController {
 
     private volatile static FileController instance;
 
-    private FileController() {}
+    private String delimiterByField = ";";
+    private String delimiterByItem = ",";
+    private String delimiterByAttrItem = "-";
 
-    public static FileController getInstace() {
+    private FileController(String delimiterByField, String delimiterByItem, String delimiterByAttrItem  ) {
+        this.delimiterByField = delimiterByField;
+        this.delimiterByItem = delimiterByItem;
+        this.delimiterByAttrItem = delimiterByAttrItem;
+    }
+
+    public static FileController getInstace(String delimiterByField, String delimiterByItem, String delimiterByAttrItem  ) {
         if ( instance == null ) {
             synchronized ( FileController.class ) {
                 if ( instance == null ) {
-                    instance = new FileController();
+                    instance = new FileController(delimiterByField,delimiterByItem , delimiterByAttrItem);
                 }
             }
         }
@@ -55,7 +63,7 @@ public class FileController {
                 //get only data files .dat
                 if (eventName.contains( Operation.FILE_EXTETION ) ){
 //                    System.out.println( eventName.toString() );
-                    Operation operation = new FileOperation();
+                    Operation operation = new FileOperation( this.delimiterByField, this.delimiterByItem, this.delimiterByAttrItem);
                     //return; // force end programa and exit
                     operation.categorize( eventName );
                 }
