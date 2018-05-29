@@ -7,8 +7,14 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -34,7 +40,7 @@ public class FileOperation implements Operation {
 
     @Override
     public void categorize(String fileName) throws IOException {
-        File file = new File( PATH_IN + "/" + fileName);
+        //
         Path path = Paths.get( PATH_IN + "/" + fileName );
 
         try (BufferedReader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)){
@@ -43,12 +49,12 @@ public class FileOperation implements Operation {
             String typeData = null;
             while ((line = reader.readLine()) != null) {
                 //process each line in some way
-                System.out.println( line );
+                //System.out.println( line );
                 data = line.split( delimiterByField );
 
                 typeData = data[0];
 
-                System.out.println( typeData );
+                //System.out.println( typeData );
 
                 if (typeData.equals( Category.TYPE_SALESMAN ) ) {
 
@@ -67,7 +73,7 @@ public class FileOperation implements Operation {
                         salesmen.replace( salesman.getCpf() , salesman );
                     }
 
-                    System.out.println( salesman.toString() );
+                    //System.out.println( salesman.toString() );
 
                 } else if ( typeData.equals( Category.TYPE_CUSTOMER ) ) {
 
@@ -86,7 +92,7 @@ public class FileOperation implements Operation {
                         customers.replace( data[1], customer );
                     }
 
-                    System.out.println( customer );
+                    //System.out.println( customer );
 
                 } else if ( typeData.equals( Category.TYPE_SALES ) ) {
                     //0    1      2                               3
@@ -101,41 +107,163 @@ public class FileOperation implements Operation {
                     Sale sale = sales.get( data[2] );
 
                     if ( sale == null ) {
-                        String[] itensData = data[2].substring(1,data[2].length()-1).split(",");
+                        String[] itensData = data[2].substring(1,data[2].length()-1).split( delimiterByItem );
 
                         sale = new Sale( data[1], data[3] );
 
                         String[] item = null;
                         for (String str: itensData) {
-                            item = str.split("-");
+                            item = str.split( delimiterByAttrItem );
                             sale.addItem( new Item( item[0], item[1], item[2] ) );
                         }
                     } else {
 
                         sale.clearItens();
 
-                        String[] itensData = data[2].substring(1,data[2].length()-1).split(",");
+                        String[] itensData = data[2].substring(1,data[2].length()-1).split( delimiterByItem );
 
                         String[] item = null;
                         for (String str: itensData) {
-                            item = str.split("-");
+                            item = str.split( delimiterByAttrItem);
                             sale.addItem( new Item( item[0], item[1], item[2] ) );
                         }
+                    }
+                    Salesman salesman = salesmen.get( sale.getSalesmanName() ) ;
 
+                    if ( salesman != null ) {
+                        salesman.addSalesValue( sale.getSum() );
                     }
 
-                    System.out.println( sale );
+                    //System.out.println( sale );
 
                 } else {
                     throw new RuntimeException("DATA TYPE NO ACCEPT " + typeData);
                 }
 
             }
+
+            //move
+            File file = new File( PATH_IN + "/" + fileName);
+            try {
+                moveFile( file, new File( Operation.PATH_PROCESS + "/" + System.currentTimeMillis() + "-" + fileName) );
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, e.getMessage() );
+            }
+
+
+            //del
+            try {
+                delete( file );
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, e.getMessage() );
+            }
+
         }
     }
 
-//● Amount of clients in the input file
-//● Amount of salesman in the input file
-//● ID of the most expensive sale
-//● Worst salesman ever
+    // Amount of clients in the input file
+    // Amount of salesman in the input file
+    // ID of the most expensive sale
+    // Worst salesman ever
+    public void processOutPut(String fileNameIn ) {
+        //Amount of clients in the input file
+        List<String> lines = new LinkedList<>();
+        lines.add( "Amount of clients in the input file is " + this.customers.size() );
+
+        //Amount of salesman in the input file
+        lines.add( "Amount of salesman in the input file is " + this.salesmen.size() );
+
+        //ID of the most expensive sale
+        lines.add( "The ID of the most expensive sale is "  + this.getIdMostExpensiveSale() );
+
+        //Worst salesman ever
+        Salesman s = this.getWorstSalesmanEver();
+        lines.add( "Worst salesman ever is " + s != null ? s.toString() : "" );
+
+
+        try {
+            writeLargerTextFile( Operation.PATH_OUT + "/{" + fileNameIn + "}.done.dat" , lines );
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, e.getMessage() );
+        }
+    }
+
+    public Salesman getWorstSalesmanEver() {
+        double sumMin = Double.MAX_VALUE;
+        Salesman s = null;
+        for ( Salesman salesman: salesmen.values() ) {
+            if ( sumMin > salesman.getSumOfSales() ) {
+                s = salesman;
+            }
+        }
+        return s;
+    }
+
+    //● Worst salesman ever
+
+    // se houver duas vendas com o mesmo valor minino pegará a primeira
+    public String getIdMostExpensiveSale() {
+        double sumMax = Double.MIN_VALUE;
+        Sale s = null;
+        for (Sale sale : sales.values() ) {
+            if ( sumMax < sale.getSum() ) {
+                sumMax = sale.getSum();
+                s = sale;
+            }
+        }
+
+        return s != null ? s.getId() : "";
+    }
+
+    public void writeLargerTextFile(String aFileName, List<String> lines) throws IOException {
+        ////%HOMEPATH%/data/out. The filename must follow this pattern, {flat_file_name}.done.dat.
+        Path path = Paths.get( aFileName );
+        try (BufferedWriter writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8) ) {
+            for(String line : lines){
+                writer.write(line);
+                writer.newLine();
+            }
+        }
+    }
+
+    private void moveFile(File source, File dest) throws IOException {
+        if( !dest.exists() ){
+            dest.createNewFile();
+        }
+        InputStream in = null;
+        OutputStream out = null;
+
+        try {
+            in = new FileInputStream(source);
+            out = new FileOutputStream(dest);
+
+            byte[] buf = new byte[1024];
+            int len;
+
+            while( (len = in.read(buf) ) > 0 ){
+                out.write(buf, 0, len);
+            }
+        } finally{
+            in.close();
+            out.close();
+        }
+    }
+
+    private boolean delete(File resource) throws IOException {
+        return resource.delete();
+    }
+
+    @Override
+    public void createDiretoryIfNotExist(String diretoryName) {
+
+        File diretory = new File( diretoryName );
+        try {
+            if( !diretory.exists() ) {
+                diretory.mkdir();
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.INFO, "Error to create the diretory " + diretoryName + "\n" + e.getMessage() );
+        }
+    }
+
 }

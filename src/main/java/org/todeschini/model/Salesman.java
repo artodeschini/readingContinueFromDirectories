@@ -11,6 +11,8 @@ public class Salesman {
     private String name;
     private Double salary;
 
+    private Double sumOfSales = 0.0;
+
     public Salesman(String cpf, String name, Double salary) {
         this.setCpf(cpf);
         this.setName(name);
@@ -23,6 +25,14 @@ public class Salesman {
         this.setSalary( salary );
     }
 
+    public void addSalesValue(Double value) {
+        if ( value != null )
+        sumOfSales += value;
+    }
+
+    public Double getSumOfSales() {
+        return this.sumOfSales;
+    }
 
     public String getCpf() {
         return cpf;
@@ -74,15 +84,13 @@ public class Salesman {
 
         Salesman salesman = (Salesman) o;
 
-        if (cpf != null ? !cpf.equals(salesman.cpf) : salesman.cpf != null) return false;
         return name != null ? name.equals(salesman.name) : salesman.name == null;
 
     }
 
     @Override
     public int hashCode() {
-        int result = cpf != null ? cpf.hashCode() : 0;
-        result = 31 * result + (name != null ? name.hashCode() : 0);
+        int result = 31 + (name != null ? name.hashCode() : 0);
         return result;
     }
 

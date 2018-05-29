@@ -11,7 +11,9 @@ public class Sale {
     //003çSaleIDç[ItemID-ItemQuantity-ItemPrice]çSalesmanname
     private String id;
     private String salesmanName;
+    private Double sum = 0.0;
     private List<Item> items = new LinkedList<Item>();
+
 
     public Sale(String id, String salesmanName ) {
         this.setId( id );
@@ -21,7 +23,6 @@ public class Sale {
     public Sale(String id, String salesmanName, /* item details */ String idItem, String quantity, String price) {
         this(id, salesmanName);
         this.addItem( new Item( idItem, quantity, price ) );
-
     }
 
     public String getId() {
@@ -42,10 +43,12 @@ public class Sale {
 
     public void addItem(Item item) {
         items.add( item );
+        sum += item.getPrice() * item.getQuantity();
     }
 
     public void clearItens() {
         items = new LinkedList<Item>();
+        sum = 0.0;
     }
 
     public List<Item> getItems() {
@@ -60,7 +63,10 @@ public class Sale {
         Sale sale = (Sale) o;
 
         return id != null ? id.equals(sale.id) : sale.id == null;
+    }
 
+    public Double getSum() {
+        return sum;
     }
 
     @Override

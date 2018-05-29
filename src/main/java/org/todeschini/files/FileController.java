@@ -40,6 +40,12 @@ public class FileController {
 
     public void createWath() throws java.io.IOException {
 
+        Operation operation = new FileOperation( this.delimiterByField, this.delimiterByItem, this.delimiterByAttrItem);
+
+        operation.createDiretoryIfNotExist( Operation.PATH_IN);
+        operation.createDiretoryIfNotExist( Operation.PATH_OUT );
+        operation.createDiretoryIfNotExist( Operation.PATH_PROCESS );
+
         Path p = Paths.get( Operation.PATH_IN );
         WatchService watcher = FileSystems.getDefault().newWatchService();
 
@@ -63,7 +69,6 @@ public class FileController {
                 //get only data files .dat
                 if (eventName.contains( Operation.FILE_EXTETION ) ){
 //                    System.out.println( eventName.toString() );
-                    Operation operation = new FileOperation( this.delimiterByField, this.delimiterByItem, this.delimiterByAttrItem);
                     //return; // force end programa and exit
                     operation.categorize( eventName );
                 }
