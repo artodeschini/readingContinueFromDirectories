@@ -9,4 +9,5 @@ public interface Category {
     String TYPE_CUSTOMER = "002";
     String TYPE_SALES    = "003";
 
+    String REGEX_FOR_DOUBLE_VALUES = "[^0-9.]";
 }

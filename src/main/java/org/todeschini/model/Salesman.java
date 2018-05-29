@@ -56,7 +56,7 @@ public class Salesman {
 
     public void setSalary(String salary) {
         try {
-            this.salary = Double.valueOf(salary);
+            this.salary = Double.valueOf(salary.replaceAll( Category.REGEX_FOR_DOUBLE_VALUES, "") );
         } catch (Exception e) {
             this.setSalary(0.0);
         }

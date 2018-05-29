@@ -1,5 +1,7 @@
 package org.todeschini.model;
 
+import org.todeschini.files.Operation;
+
 /**
  * Created by Artur on 28/05/18.
  */
@@ -12,7 +14,7 @@ public class Item {
 
     public Item(String id, String quantity, String price) {
         this.setId( id );
-        this.setQuantity( quantity);
+        this.setQuantity( quantity );
         this.setPrice( price );
     }
 
@@ -34,7 +36,7 @@ public class Item {
 
     public void setQuantity(String quantity) {
         try {
-            this.quantity = Double.valueOf( quantity );
+            this.quantity = Double.valueOf( quantity.replaceAll(Category.REGEX_FOR_DOUBLE_VALUES, "")  );
         } catch (Exception e) {
             this.quantity = 0.0;
         }
@@ -46,7 +48,7 @@ public class Item {
 
     public void setPrice(String price) {
         try {
-            this.price = Double.valueOf( price );
+            this.price = Double.valueOf( price.replaceAll(Category.REGEX_FOR_DOUBLE_VALUES, "") );
         } catch (Exception e) {
             this.price = 0.0;
         }

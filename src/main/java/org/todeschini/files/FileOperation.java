@@ -37,58 +37,62 @@ public class FileOperation implements Operation {
     }
 
     @Override
-    public void categorize(String fileName) throws IOException {
-        //
-        Path path = Paths.get( PATH_IN + "/" + fileName );
+    public synchronized void categorize(String fileName) throws IOException {
+        LOGGER.log(Level.INFO, fileName + " in File process");
 
-        try (BufferedReader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)){
+        Path path = Paths.get(PATH_IN + "/" + fileName);
+
+        int quantitySalesman = 0;
+        int quantityCustomer = 0;
+
+        try (BufferedReader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
             String line = null;
             String data[] = null;
             String typeData = null;
             while ((line = reader.readLine()) != null) {
-                data = line.trim().split( delimiterByField );
+                data = line.trim().split(delimiterByField);
 
                 typeData = data[0];
 
-                if (typeData.equals( Category.TYPE_SALESMAN ) ) {
+                if (typeData.equals(Category.TYPE_SALESMAN)) {
 
                     //0    1   2   3
                     //001çCPFçNameçSalary
-                    Salesman salesman = salesmen.get( data[2] ) ;
+                    Salesman salesman = salesmen.get(data[2]);
 
-                    if ( salesman == null ) {
-                        salesman = new Salesman( data[1], data[2], data[3] );
-                        salesmen.put( data[2], salesman );
+                    if (salesman == null) {
+                        salesman = new Salesman(data[1], data[2], data[3]);
+                        salesmen.put(data[2], salesman);
 
                     } else {
-                        salesman.setName( data[2] );
-                        salesman.setSalary( data[3] );
+                        salesman.setName(data[2]);
+                        salesman.setSalary(data[3]);
 
-                        salesmen.replace( salesman.getCpf() , salesman );
+                        salesmen.replace(salesman.getCpf(), salesman);
                     }
-
+                    quantitySalesman++;
                     //System.out.println( salesman.toString() );
 
-                } else if ( typeData.equals( Category.TYPE_CUSTOMER ) ) {
+                } else if (typeData.equals(Category.TYPE_CUSTOMER)) {
 
                     //0    1   2    3
                     //002çCNPJçNameçBusinessAre
-                    Customer customer = customers.get( data[1] );
+                    Customer customer = customers.get(data[1]);
 
-                    if ( customer == null ) {
-                        customer = new Customer( data[1], data[2], data[3] );
-                        customers.put( data[1], customer);
+                    if (customer == null) {
+                        customer = new Customer(data[1], data[2], data[3]);
+                        customers.put(data[1], customer);
                     } else {
 
-                        customer.setName( data[2 ] );
-                        customer.setBusinessArea( data[3] );
+                        customer.setName(data[2]);
+                        customer.setBusinessArea(data[3]);
 
-                        customers.replace( data[1], customer );
+                        customers.replace(data[1], customer);
                     }
-
+                    quantityCustomer++;
                     //System.out.println( customer );
 
-                } else if ( typeData.equals( Category.TYPE_SALES ) ) {
+                } else if (typeData.equals(Category.TYPE_SALES)) {
                     //0    1      2                               3
                     //003çSaleIDç[ItemID-ItemQuantity-ItemPrice]çSalesmanname
                     //in = "003ç10ç[1-10-100,2-30-2.50,3-40-3.10]çDiego";
@@ -98,63 +102,64 @@ public class FileOperation implements Operation {
                     //[1-10-100
                     // ,2-30-2.50,3-40-3.10]
 
-                    Sale sale = sales.get( data[2] );
+                    Sale sale = sales.get(data[2]);
 
-                    if ( sale == null ) {
-                        String[] itensData = data[2].substring(1,data[2].length()-1).split( delimiterByItem );
+                    if (sale == null) {
+                        String[] itensData = data[2].substring(1, data[2].length() - 1).split(delimiterByItem);
 
-                        sale = new Sale( data[1], data[3] );
+                        sale = new Sale(data[1], data[3]);
 
                         String[] item = null;
-                        for (String str: itensData) {
-                            item = str.split( delimiterByAttrItem );
-                            sale.addItem( new Item( item[0], item[1], item[2] ) );
+                        for (String str : itensData) {
+                            item = str.split(delimiterByAttrItem);
+                            sale.addItem(new Item(item[0], item[1], item[2]));
                         }
                     } else {
 
                         sale.clearItens();
 
-                        String[] itensData = data[2].substring(1,data[2].length()-1).split( delimiterByItem );
+                        String[] itensData = data[2].substring(1, data[2].length() - 1).split(delimiterByItem);
 
                         String[] item = null;
-                        for (String str: itensData) {
-                            item = str.split( delimiterByAttrItem);
-                            sale.addItem( new Item( item[0], item[1], item[2] ) );
+                        for (String str : itensData) {
+                            item = str.split(delimiterByAttrItem);
+                            sale.addItem(new Item(item[0], item[1], item[2]));
                         }
                     }
-                    Salesman salesman = salesmen.get( sale.getSalesmanName() ) ;
+                    Salesman salesman = salesmen.get(sale.getSalesmanName());
 
-                    if ( salesman != null ) {
-                        salesman.addSalesValue( sale.getSum() );
+                    if (salesman != null) {
+                        salesman.addSalesValue(sale.getSum());
                     }
 
                     //System.out.println( sale );
 
                 } else {
-                    throw new RuntimeException("DATA TYPE NO ACCEPT " + typeData);
+                    throw new RuntimeException("DATA TYPE NO ACCEPT " + typeData + " the first column must contain the values 001, 002, 003");
                 }
-
             }
-        }
 
-        this.processOutPut( fileName );
+            this.processOutPut(fileName, quantitySalesman, quantityCustomer);
 
-        //move
-        File file = new File( PATH_IN + "/" + fileName);
-        try {
-            moveFile( file, new File( Operation.PATH_PROCESS + "/" + System.currentTimeMillis() + "-" + fileName) );
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, e.getMessage() );
-            e.printStackTrace();
-        }
+            //move
+            File file = new File(PATH_IN + "/" + fileName);
+            try {
+                moveFile(file, new File(Operation.PATH_PROCESS + "/" + System.currentTimeMillis() + "-" + fileName));
+                LOGGER.log(Level.INFO, "The File " + fileName + " has move to " +  Operation.PATH_PROCESS );
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, e.getMessage());
+//                e.printStackTrace();
+            }
 
 
-        //del
-        try {
-            delete( file );
-        } catch (Exception e) {
-            e.printStackTrace();
-            LOGGER.log(Level.SEVERE, e.getMessage() );
+            //del
+            try {
+                delete(file);
+                LOGGER.log(Level.INFO, "The File " + fileName + " has delete in " +  Operation.PATH_PROCESS );
+            } catch (Exception e) {
+//                e.printStackTrace();
+                LOGGER.log(Level.SEVERE, e.getMessage());
+            }
         }
     }
 
@@ -162,13 +167,13 @@ public class FileOperation implements Operation {
     // Amount of salesman in the input file
     // ID of the most expensive sale
     // Worst salesman ever
-    public void processOutPut(String fileNameIn ) {
+    public synchronized void processOutPut(String fileNameIn, int quantitySalesman, int quantityCustomer) {
         //Amount of clients in the input file
         List<String> lines = new LinkedList<>();
-        lines.add( "Amount of clients in the input file is " + this.customers.size() );
+        lines.add( "Amount of clients in the input file is " + quantitySalesman );
 
         //Amount of salesman in the input file
-        lines.add( "Amount of salesman in the input file is " + this.salesmen.size() );
+        lines.add( "Amount of salesman in the input file is " +quantityCustomer );
 
         //ID of the most expensive sale
         lines.add( "The ID of the most expensive sale is "  + this.getIdMostExpensiveSale() );
@@ -177,11 +182,17 @@ public class FileOperation implements Operation {
         Salesman s = this.getWorstSalesmanEver();
         lines.add( "Worst salesman ever is " + s != null ? s.toString() : "" );
 
+        StringBuilder fileNameCreate = new StringBuilder()
+                .append( Operation.PATH_OUT )
+                .append( "/{" )
+                .append( fileNameIn.replace(".dat","") )
+                .append("}.done.dat");
 
         try {
-            writeLargerTextFile( Operation.PATH_OUT + "/{" + fileNameIn.replace(".dat","")  + "}.done.dat" , lines );
+            writeLargerTextFile( fileNameCreate.toString() , lines );
+            LOGGER.log(Level.INFO, "File create " + fileNameCreate.toString() );
         } catch (Exception e) {
-            e.printStackTrace();
+//            e.printStackTrace();
             LOGGER.log(Level.SEVERE, e.getMessage() );
         }
     }
@@ -197,8 +208,7 @@ public class FileOperation implements Operation {
         return s;
     }
 
-    //● Worst salesman ever
-
+    //Worst salesman ever
     // se houver duas vendas com o mesmo valor minino pegará a primeira
     public String getIdMostExpensiveSale() {
         double sumMax = Double.MIN_VALUE;
@@ -220,7 +230,7 @@ public class FileOperation implements Operation {
         //try (BufferedWriter writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8) ) {
             Files.write(path, lines,  StandardCharsets.UTF_8, StandardOpenOption.CREATE);
         } catch (Exception e) {
-            e.printStackTrace();
+//            e.printStackTrace();
             LOGGER.log(Level.SEVERE, e.getMessage() );
         }
     }
@@ -264,5 +274,4 @@ public class FileOperation implements Operation {
             LOGGER.log(Level.INFO, "Error to create the diretory " + diretoryName + "\n" + e.getMessage() );
         }
     }
-
 }

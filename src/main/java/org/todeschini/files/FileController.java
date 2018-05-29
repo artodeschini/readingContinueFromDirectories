@@ -7,11 +7,15 @@ import java.nio.file.Path;
 import java.nio.file.WatchKey;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created by Artur on 28/05/18.
  */
 public class FileController {
+
+    private static Logger LOGGER = Logger.getLogger( FileController.class.getSimpleName() );
 
     private volatile static FileController instance;
 
@@ -68,9 +72,13 @@ public class FileController {
 
                 //get only data files .dat
                 if (eventName.contains( Operation.FILE_EXTETION ) ){
-//                    System.out.println( eventName.toString() );
                     //return; // force end programa and exit
-                    operation.categorize( eventName );
+                    try {
+                        operation.categorize( eventName );
+                    } catch (Exception e) {
+                        LOGGER.log(Level.SEVERE, e.getMessage() );
+                    }
+
                 }
             }
             key.reset(); //start loop again

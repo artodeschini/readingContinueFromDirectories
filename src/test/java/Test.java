@@ -37,7 +37,6 @@ public class Test {
 
         Sale sale = new Sale( data[1], data[3] );
 
-        Item i = null;
         String[] item = null;
         for (String s: itensData) {
             item = s.split(Operation.ITEM_DELIMITER_ATR);
@@ -46,7 +45,7 @@ public class Test {
 
         System.out.println( sale );
 
+        System.out.println( " 10.0?".replaceAll("[^0-9.]", "") );
     }
-
 
 }
